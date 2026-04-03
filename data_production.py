@@ -232,9 +232,9 @@ def initialize_runtime_context(args):
     N = lat + delta_lat
 
     # # Clone grounded-eo repository if not already present
-    # grounded_eo_path = os.path.join(WRK_DIR, 'grounded-eo')
-    # if not os.path.exists(grounded_eo_path):
-    #     subprocess.run(['git', 'clone', 'https://github.com/luke-a-brown/grounded-eo.git', grounded_eo_path], check=True)
+    grounded_eo_path = os.path.join(WRK_DIR, 'grounded-eo')
+    if not os.path.exists(grounded_eo_path):
+        subprocess.run(['git', 'clone', 'https://github.com/luke-a-brown/grounded-eo.git', grounded_eo_path], check=True)
 
 # =============================================================================
 # HELPER FUNCTIONS
