@@ -8,6 +8,7 @@ from scipy.optimize import dual_annealing
 import soil_moisture_model
 from soil_moisture_model import SoilWaterParams, simulate_soil_water_balance, params_as_dict
 import sys
+import os
 
 if len(sys.argv) > 1:
     data_dir = sys.argv[1]
@@ -24,6 +25,12 @@ icosStations = icosStations[icosStations['Site type'].isin([
 
 # Use icosSites if it exists, otherwise fall back to icosStations
 sites_df = icosSites if "icosSites" in globals() else icosStations
+
+# Load existing best_params if available
+existing_sites = set()
+best_params_file = f"{data_dir}/best_params_by_site.parquet"
+if os.path.exists(best_params_file):
+    existing_sites = set(pd.read_parquet(best_params_file).index)
 
 all_results = []
 best_params_records = []
@@ -73,6 +80,11 @@ def vector_to_full_params(x):
     return replace(base_params, **vals), float(x[-1])
 
 for site_name in sites_df["Id"].dropna().unique():
+    # Skip if already calibrated
+    if site_name in existing_sites:
+        print(f"Skipping {site_name} (already calibrated)")
+        continue
+    
     try:
         # ---------- Site/model inputs ----------
         D_site = xr.open_dataset(f"/mnt/shared/pyrealm2/inputData/{site_name}_weekly_final_variables.nc")
