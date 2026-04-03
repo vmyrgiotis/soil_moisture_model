@@ -29,8 +29,15 @@ sites_df = icosSites if "icosSites" in globals() else icosStations
 # Load existing best_params if available
 existing_sites = set()
 best_params_file = f"{data_dir}/best_params_by_site.parquet"
+results_file = f"{data_dir}/results_all_sites.parquet"
+
 if os.path.exists(best_params_file):
     existing_sites = set(pd.read_parquet(best_params_file).index)
+
+# Load existing results if available
+existing_results = None
+if os.path.exists(results_file):
+    existing_results = pd.read_parquet(results_file)
 
 all_results = []
 best_params_records = []
@@ -207,12 +214,17 @@ for site_name in sites_df["Id"].dropna().unique():
             .set_index(["time", "site_name", "plant_type"])
             .sort_index()
         )
+        if existing_results is not None:
+            results_all_sites = pd.concat([existing_results, results_all_sites])
         results_all_sites.to_parquet(f"{data_dir}/results_all_sites.parquet")
     else:
         print("Warning: No successful calibrations to save.")
 
     if best_params_records:
         best_params_by_site = pd.DataFrame(best_params_records).set_index("site_name").sort_index()
+        if os.path.exists(best_params_file):
+            existing_best_params = pd.read_parquet(best_params_file)
+            best_params_by_site = pd.concat([existing_best_params, best_params_by_site])
         best_params_by_site.to_parquet(f"{data_dir}/best_params_by_site.parquet")
     else:
         print("Warning: No best parameters to save.")
